@@ -46,6 +46,8 @@
     <string name="import_description">Импорт сетей WiFi из файлов JSON</string>
     <string name="export_action">Экспортировать сети</string>
     <string name="export_description">Экспорт сетей WiFi в файл JSON</string>
+    <string name="export_current_action">Экспортировать текущую сеть</string>
+    <string name="export_current_description">Экспорт текущей подключенной сети WiFi</string>
 
     <!-- Security Section -->
     <string name="security_section">Безопасность</string>
@@ -121,10 +123,13 @@
     <string name="import_networks_failed">Ошибка при импорте сетей</string>
     <string name="export_networks_success">Сети успешно экспортированы</string>
     <string name="export_networks_failed">Ошибка при экспорте сетей</string>
+    <string name="export_current_network_success">Текущая сеть успешно экспортирована</string>
+    <string name="export_current_network_failed">Ошибка при экспорте текущей сети</string>
     <string name="forget_success">Все сети успешно удалены</string>
     <string name="forget_failed">Не удалось удалить все сети</string>
     <string name="no_network_to_forget">Сети для удаления не найдены</string>
     <string name="no_network_to_export">Нет доступных сетей для экспорта</string>
+    <string name="no_current_network_to_export">Нет текущей сети для экспорта</string>
     <string name="invalid_json">Невозможно использовать выбранный файл JSON</string>
     <string name="app_lock_required">Для доступа используйте блокировку экрана</string>
     <string name="app_lock_too_many_attempts">Слишком много попыток. Попробуйте позже.</string>

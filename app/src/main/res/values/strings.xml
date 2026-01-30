@@ -46,6 +46,8 @@
     <string name="import_description">Import WiFi networks from JSON file(s)</string>
     <string name="export_action">Export networks</string>
     <string name="export_description">Export WiFi networks to a JSON file</string>
+    <string name="export_current_action">Export current network</string>
+    <string name="export_current_description">Export the currently connected WiFi network</string>
 
     <!-- Security Section -->
     <string name="security_section">Security</string>
@@ -121,10 +123,13 @@
     <string name="import_networks_failed">Failed to import networks</string>
     <string name="export_networks_success">Exported networks successfully</string>
     <string name="export_networks_failed">Failed to export networks</string>
+    <string name="export_current_network_success">Exported current network successfully</string>
+    <string name="export_current_network_failed">Failed to export current network</string>
     <string name="forget_success">Forgot all networks successfully</string>
     <string name="forget_failed">Failed to forget all networks</string>
     <string name="no_network_to_forget">No networks found to forget</string>
     <string name="no_network_to_export">No networks available to export</string>
+    <string name="no_current_network_to_export">No current network to export</string>
     <string name="invalid_json">Unable to use the selected JSON file</string>
     <string name="app_lock_required">Enter your screen lock to access</string>
     <string name="app_lock_too_many_attempts">Too many attempts. Try again later.</string>

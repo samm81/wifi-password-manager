@@ -2,6 +2,7 @@
 
 package io.github.wifi_password_manager.ui.screen.setting
 
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -19,8 +20,10 @@ import io.github.wifi_password_manager.domain.model.Settings
 import io.github.wifi_password_manager.domain.repository.FileRepository
 import io.github.wifi_password_manager.domain.repository.SettingRepository
 import io.github.wifi_password_manager.domain.repository.WifiRepository
+import io.github.wifi_password_manager.utils.ExportCurrentNetworkResult
 import io.github.wifi_password_manager.utils.ExportNetworksResult
 import io.github.wifi_password_manager.utils.UiText
+import io.github.wifi_password_manager.utils.exportCurrentNetwork
 import io.github.wifi_password_manager.utils.exportNetworks
 import io.github.wifi_password_manager.utils.toWifiConfigurations
 import kotlin.time.Clock
@@ -47,6 +50,7 @@ import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.SerializationException
 
 class SettingViewModel(
+    private val context: Context,
     private val settingRepository: SettingRepository,
     private val wifiRepository: WifiRepository,
     private val fileRepository: FileRepository,
@@ -75,6 +79,8 @@ class SettingViewModel(
         data object ImportNetworks : Action
 
         data object ExportNetworks : Action
+
+        data object ExportCurrentNetwork : Action
 
         data object ShowForgetAllDialog : Action
 
@@ -113,6 +119,7 @@ class SettingViewModel(
 
             is Action.ImportNetworks -> onImportNetworks()
             is Action.ExportNetworks -> onExportNetworks()
+            is Action.ExportCurrentNetwork -> onExportCurrentNetwork()
             is Action.ShowForgetAllDialog -> onShowForgetAllDialog()
             is Action.HideForgetAllDialog -> _state.update { it.copy(showForgetAllDialog = false) }
             is Action.ConfirmForgetAllNetworks -> onForgetAllNetworks()
@@ -186,6 +193,55 @@ class SettingViewModel(
                         _event.send(
                             Event.ShowMessage(
                                 UiText.StringResource(R.string.export_networks_failed)
+                            )
+                        )
+                    },
+                )
+        }
+    }
+
+    @OptIn(ExperimentalTime::class, FormatStringsInDatetimeFormats::class)
+    private fun onExportCurrentNetwork() {
+        viewModelScope.launch {
+            runCatching {
+                    val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+                    val formatter =
+                        LocalDateTime.Format { byUnicodePattern(pattern = "yyyy-MM-dd_HH:mm:ss") }
+                    val file =
+                        FileKit.openFileSaver(
+                            suggestedName = "WiFi_Current_${formatter.format(now)}",
+                            extension = "json",
+                        ) ?: return@launch
+                    val result =
+                        exportCurrentNetwork(
+                            context = context,
+                            wifiRepository = wifiRepository,
+                            fileRepository = fileRepository,
+                        ) { json ->
+                            Dispatchers.IO { file.writeString(json) }
+                        }
+                    if (result == ExportCurrentNetworkResult.NoCurrentNetwork) {
+                        _event.send(
+                            Event.ShowMessage(
+                                UiText.StringResource(R.string.no_current_network_to_export)
+                            )
+                        )
+                        return@launch
+                    }
+                }
+                .fold(
+                    onSuccess = {
+                        _event.send(
+                            Event.ShowMessage(
+                                UiText.StringResource(R.string.export_current_network_success)
+                            )
+                        )
+                    },
+                    onFailure = {
+                        Log.e(TAG, "Error exporting current network", it)
+                        _event.send(
+                            Event.ShowMessage(
+                                UiText.StringResource(R.string.export_current_network_failed)
                             )
                         )
                     },

@@ -129,6 +129,21 @@ fun SettingView(state: SettingViewModel.State, onAction: (SettingViewModel.Actio
                             Text(text = stringResource(R.string.export_description))
                         },
                     )
+
+                    HorizontalDivider(color = MaterialTheme.colorScheme.surfaceContainer)
+
+                    ListItem(
+                        modifier =
+                            Modifier.clickable {
+                                onAction(SettingViewModel.Action.ExportCurrentNetwork)
+                            },
+                        headlineContent = {
+                            Text(text = stringResource(R.string.export_current_action))
+                        },
+                        supportingContent = {
+                            Text(text = stringResource(R.string.export_current_description))
+                        },
+                    )
                 }
             }
 

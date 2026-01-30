@@ -24,8 +24,9 @@ class ViewModelModule {
 
     @KoinViewModel
     fun settingViewModel(
+        context: android.content.Context,
         settingRepository: SettingRepository,
         wifiRepository: WifiRepository,
         fileRepository: FileRepository,
-    ) = SettingViewModel(settingRepository, wifiRepository, fileRepository)
+    ) = SettingViewModel(context, settingRepository, wifiRepository, fileRepository)
 }
