@@ -19,7 +19,9 @@ import io.github.wifi_password_manager.domain.model.Settings
 import io.github.wifi_password_manager.domain.repository.FileRepository
 import io.github.wifi_password_manager.domain.repository.SettingRepository
 import io.github.wifi_password_manager.domain.repository.WifiRepository
+import io.github.wifi_password_manager.utils.ExportNetworksResult
 import io.github.wifi_password_manager.utils.UiText
+import io.github.wifi_password_manager.utils.exportNetworks
 import io.github.wifi_password_manager.utils.toWifiConfigurations
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
@@ -149,14 +151,6 @@ class SettingViewModel(
     private fun onExportNetworks() {
         viewModelScope.launch {
             runCatching {
-                    val count = wifiRepository.getNetworkCount()
-                    if (count == 0) {
-                        _event.send(
-                            Event.ShowMessage(UiText.StringResource(R.string.no_network_to_export))
-                        )
-                        return@launch
-                    }
-
                     val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
                     val formatter =
                         LocalDateTime.Format { byUnicodePattern(pattern = "yyyy-MM-dd_HH:mm:ss") }
@@ -165,8 +159,19 @@ class SettingViewModel(
                             suggestedName = "WiFi_${formatter.format(now)}",
                             extension = "json",
                         ) ?: return@launch
-                    val networks = wifiRepository.getAllNetworksList()
-                    Dispatchers.IO { file.writeString(fileRepository.networksToJson(networks)) }
+                    val result =
+                        exportNetworks(
+                            wifiRepository = wifiRepository,
+                            fileRepository = fileRepository,
+                        ) { json ->
+                            Dispatchers.IO { file.writeString(json) }
+                        }
+                    if (result == ExportNetworksResult.NoNetworks) {
+                        _event.send(
+                            Event.ShowMessage(UiText.StringResource(R.string.no_network_to_export))
+                        )
+                        return@launch
+                    }
                 }
                 .fold(
                     onSuccess = {

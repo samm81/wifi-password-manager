@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="moe.shizuku.manager.permission.API_V23" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
 
     <application
         android:name=".App"
@@ -44,6 +45,16 @@
                 android:name="android.service.quicksettings.TILE_CATEGORY"
                 android:value="android.service.quicksettings.CATEGORY_UTILITIES" />
         </service>
+
+        <receiver
+            android:name=".receivers.ExportNetworksReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="io.github.wifi_password_manager.action.EXPORT_NETWORKS" />
+                <action
+                    android:name="io.github.wifi_password_manager.action.EXPORT_CURRENT_NETWORK" />
+            </intent-filter>
+        </receiver>
 
         <provider
             android:name="androidx.startup.InitializationProvider"

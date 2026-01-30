@@ -28,6 +28,23 @@ An Android application for managing saved WiFi network passwords using privilege
 - **Android 11 (API 30) or higher**
 - **For system-level WiFi management**: [Shizuku](https://shizuku.rikka.app/) or root access
 
+## Automation (Tasker)
+
+You can trigger a background export using a broadcast intent:
+
+- **Action**: `io.github.wifi_password_manager.action.EXPORT_NETWORKS`
+- **Result broadcast action**: `io.github.wifi_password_manager.action.EXPORT_NETWORKS_RESULT`
+- **Action (current network only)**: `io.github.wifi_password_manager.action.EXPORT_CURRENT_NETWORK`
+- **Result broadcast action (current network only)**:
+  `io.github.wifi_password_manager.action.EXPORT_CURRENT_NETWORK_RESULT`
+- **Result extras**:
+  - `extra_success` (boolean)
+  - `extra_path` (string, present on success)
+  - `extra_error` (string, present on failure; `no_networks` or `no_current_network`)
+- **Output location**: `Android/data/io.github.wifi_password_manager/files/exports/`
+
+This is suitable for Tasker’s “Send Intent” action and an optional “Receive Intent” profile for the result broadcast.
+
 ## Installation
 
 <a href="https://apt.izzysoft.de/packages/io.github.wifi_password_manager">
