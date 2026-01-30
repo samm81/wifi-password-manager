@@ -34,10 +34,13 @@ You can trigger a background export using a broadcast intent:
 
 - **Action**: `io.github.wifi_password_manager.action.EXPORT_NETWORKS`
 - **Result broadcast action**: `io.github.wifi_password_manager.action.EXPORT_NETWORKS_RESULT`
+- **Action (current network only)**: `io.github.wifi_password_manager.action.EXPORT_CURRENT_NETWORK`
+- **Result broadcast action (current network only)**:
+  `io.github.wifi_password_manager.action.EXPORT_CURRENT_NETWORK_RESULT`
 - **Result extras**:
   - `extra_success` (boolean)
   - `extra_path` (string, present on success)
-  - `extra_error` (string, present on failure; `no_networks` if nothing to export)
+  - `extra_error` (string, present on failure; `no_networks` or `no_current_network`)
 - **Output location**: `Android/data/io.github.wifi_password_manager/files/exports/`
 
 This is suitable for Tasker’s “Send Intent” action and an optional “Receive Intent” profile for the result broadcast.

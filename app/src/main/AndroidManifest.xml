@@ -51,6 +51,8 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="io.github.wifi_password_manager.action.EXPORT_NETWORKS" />
+                <action
+                    android:name="io.github.wifi_password_manager.action.EXPORT_CURRENT_NETWORK" />
             </intent-filter>
         </receiver>
 
