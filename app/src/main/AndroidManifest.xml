@@ -45,6 +45,14 @@
                 android:value="android.service.quicksettings.CATEGORY_UTILITIES" />
         </service>
 
+        <receiver
+            android:name=".receivers.ExportNetworksReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="io.github.wifi_password_manager.action.EXPORT_NETWORKS" />
+            </intent-filter>
+        </receiver>
+
         <provider
             android:name="androidx.startup.InitializationProvider"
             android:authorities="${applicationId}.androidx-startup"
