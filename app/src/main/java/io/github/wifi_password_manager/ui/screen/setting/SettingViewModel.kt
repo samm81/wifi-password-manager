@@ -93,6 +93,12 @@ class SettingViewModel(
         data class ShowMessage(val message: UiText) : Event
     }
 
+    private sealed interface ExportOutcome {
+        data object Success : ExportOutcome
+
+        data object NoData : ExportOutcome
+    }
+
     private val _state = MutableStateFlow(State())
     val state =
         combine(_state, settingRepository.settings) { state, settings ->
@@ -157,96 +163,95 @@ class SettingViewModel(
     @OptIn(ExperimentalTime::class, FormatStringsInDatetimeFormats::class)
     private fun onExportNetworks() {
         viewModelScope.launch {
-            runCatching {
-                    val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
-                    val formatter =
-                        LocalDateTime.Format { byUnicodePattern(pattern = "yyyy-MM-dd_HH:mm:ss") }
-                    val file =
-                        FileKit.openFileSaver(
-                            suggestedName = "WiFi_${formatter.format(now)}",
-                            extension = "json",
-                        ) ?: return@launch
-                    val result =
-                        exportNetworks(
-                            wifiRepository = wifiRepository,
-                            fileRepository = fileRepository,
-                        ) { json ->
-                            Dispatchers.IO { file.writeString(json) }
-                        }
-                    if (result == ExportNetworksResult.NoNetworks) {
-                        _event.send(
-                            Event.ShowMessage(UiText.StringResource(R.string.no_network_to_export))
-                        )
-                        return@launch
+            runExportWithFileSaver(
+                suggestedPrefix = "WiFi",
+                noDataMessageRes = R.string.no_network_to_export,
+                successMessageRes = R.string.export_networks_success,
+                failureMessageRes = R.string.export_networks_failed,
+                logMessage = "Error exporting networks",
+            ) { file ->
+                val result =
+                    exportNetworks(
+                        wifiRepository = wifiRepository,
+                        fileRepository = fileRepository,
+                    ) { json ->
+                        Dispatchers.IO { file.writeString(json) }
                     }
+                when (result) {
+                    ExportNetworksResult.Success -> ExportOutcome.Success
+                    ExportNetworksResult.NoNetworks -> ExportOutcome.NoData
                 }
-                .fold(
-                    onSuccess = {
-                        _event.send(
-                            Event.ShowMessage(
-                                UiText.StringResource(R.string.export_networks_success)
-                            )
-                        )
-                    },
-                    onFailure = {
-                        Log.e(TAG, "Error exporting networks", it)
-                        _event.send(
-                            Event.ShowMessage(
-                                UiText.StringResource(R.string.export_networks_failed)
-                            )
-                        )
-                    },
-                )
+            }
         }
     }
 
     @OptIn(ExperimentalTime::class, FormatStringsInDatetimeFormats::class)
     private fun onExportCurrentNetwork() {
         viewModelScope.launch {
-            runCatching {
-                    val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
-                    val formatter =
-                        LocalDateTime.Format { byUnicodePattern(pattern = "yyyy-MM-dd_HH:mm:ss") }
-                    val file =
-                        FileKit.openFileSaver(
-                            suggestedName = "WiFi_Current_${formatter.format(now)}",
-                            extension = "json",
-                        ) ?: return@launch
-                    val result =
-                        exportCurrentNetwork(
-                            context = context,
-                            wifiRepository = wifiRepository,
-                            fileRepository = fileRepository,
-                        ) { json ->
-                            Dispatchers.IO { file.writeString(json) }
-                        }
-                    if (result == ExportCurrentNetworkResult.NoCurrentNetwork) {
+            runExportWithFileSaver(
+                suggestedPrefix = "WiFi_Current",
+                noDataMessageRes = R.string.no_current_network_to_export,
+                successMessageRes = R.string.export_current_network_success,
+                failureMessageRes = R.string.export_current_network_failed,
+                logMessage = "Error exporting current network",
+            ) { file ->
+                val result =
+                    exportCurrentNetwork(
+                        context = context,
+                        wifiRepository = wifiRepository,
+                        fileRepository = fileRepository,
+                    ) { json ->
+                        Dispatchers.IO { file.writeString(json) }
+                    }
+                when (result) {
+                    ExportCurrentNetworkResult.Success -> ExportOutcome.Success
+                    ExportCurrentNetworkResult.NoCurrentNetwork -> ExportOutcome.NoData
+                }
+            }
+        }
+    }
+
+    @OptIn(ExperimentalTime::class, FormatStringsInDatetimeFormats::class)
+    private suspend fun runExportWithFileSaver(
+        suggestedPrefix: String,
+        noDataMessageRes: Int,
+        successMessageRes: Int,
+        failureMessageRes: Int,
+        logMessage: String,
+        exporter: suspend (PlatformFile) -> ExportOutcome,
+    ) {
+        runCatching {
+                val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+                val formatter =
+                    LocalDateTime.Format { byUnicodePattern(pattern = "yyyy-MM-dd_HH:mm:ss") }
+                val file =
+                    FileKit.openFileSaver(
+                        suggestedName = "${suggestedPrefix}_${formatter.format(now)}",
+                        extension = "json",
+                    ) ?: return@runCatching
+                when (exporter(file)) {
+                    ExportOutcome.Success -> Unit
+                    ExportOutcome.NoData -> {
                         _event.send(
-                            Event.ShowMessage(
-                                UiText.StringResource(R.string.no_current_network_to_export)
-                            )
+                            Event.ShowMessage(UiText.StringResource(noDataMessageRes))
                         )
-                        return@launch
+                        return@runCatching
                     }
                 }
-                .fold(
-                    onSuccess = {
-                        _event.send(
-                            Event.ShowMessage(
-                                UiText.StringResource(R.string.export_current_network_success)
-                            )
-                        )
-                    },
-                    onFailure = {
-                        Log.e(TAG, "Error exporting current network", it)
-                        _event.send(
-                            Event.ShowMessage(
-                                UiText.StringResource(R.string.export_current_network_failed)
-                            )
-                        )
-                    },
-                )
-        }
+            }
+            .fold(
+                onSuccess = {
+                    _event.send(
+                        Event.ShowMessage(UiText.StringResource(successMessageRes))
+                    )
+                },
+                onFailure = {
+                    Log.e(TAG, logMessage, it)
+                    _event.send(
+                        Event.ShowMessage(UiText.StringResource(failureMessageRes))
+                    )
+                },
+            )
     }
 
     private fun onImportNetworks() {
